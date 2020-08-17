@@ -5,7 +5,7 @@ type Specification interface {
 	And(Specification) Specification
 	Or(Specification) Specification
 	Not() Specification
-	// Relate(Specification)
+	Relate(Specification)
 }
 
 type BaseSpecification struct {
@@ -22,7 +22,7 @@ func (s *BaseSpecification) And(spec Specification) Specification {
 	a := &AndSpecification{
 		s.Specification, spec,
 	}
-	// a.Relate(a)
+	a.Relate(a)
 	return a
 }
 
@@ -31,7 +31,7 @@ func (s *BaseSpecification) Or(spec Specification) Specification {
 	a := &OrSpecification{
 		s.Specification, spec,
 	}
-	// a.Relate(a)
+	a.Relate(a)
 	return a
 }
 
@@ -40,7 +40,7 @@ func (s *BaseSpecification) Not() Specification {
 	a := &NotSpecification{
 		s.Specification,
 	}
-	// a.Relate(a)
+	a.Relate(a)
 	return a
 }
 
@@ -60,8 +60,6 @@ func (s *AndSpecification) IsSatisfiedBy(t interface{}) bool {
 	return s.Specification.IsSatisfiedBy(t) && s.compare.IsSatisfiedBy(t)
 }
 
-/////
-
 // OrSpecification
 type OrSpecification struct {
 	Specification
@@ -73,8 +71,6 @@ func (s *OrSpecification) IsSatisfiedBy(t interface{}) bool {
 	return s.Specification.IsSatisfiedBy(t) || s.compare.IsSatisfiedBy(t)
 }
 
-/////
-
 // NotSpecification
 type NotSpecification struct {
 	Specification
@@ -82,5 +78,5 @@ type NotSpecification struct {
 
 // Check specification
 func (s *NotSpecification) IsSatisfiedBy(t interface{}) bool {
-	return s.Specification.IsSatisfiedBy(t)
+	return !s.Specification.IsSatisfiedBy(t)
 }

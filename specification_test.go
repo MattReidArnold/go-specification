@@ -17,7 +17,9 @@ type PottyTrainable struct {
 }
 
 func NewPottyTrainable() specification.Specification {
-	return &PottyTrainable{&specification.BaseSpecification{}}
+	s := &PottyTrainable{&specification.BaseSpecification{}}
+	s.Relate(s)
+	return s
 }
 
 func (s *PottyTrainable) IsSatisfiedBy(i interface{}) bool {
@@ -38,13 +40,13 @@ func TestPottyTrainable(t *testing.T) {
 	t.Run("PottyTrainable dog", func(t *testing.T) {
 		pottyTrainable := NewPottyTrainable()
 
-		b := Dog{
+		d := Dog{
 			LearnableSkills: []string{"sit", "stay", "house broken"},
 		}
 
 		want := true
 		// true!
-		got := pottyTrainable.IsSatisfiedBy(b)
+		got := pottyTrainable.IsSatisfiedBy(d)
 
 		if got != want {
 			t.Errorf("want %v, got %v.\n", want, got)
@@ -52,14 +54,14 @@ func TestPottyTrainable(t *testing.T) {
 	})
 
 	t.Run("Not PottyTrainable dog", func(t *testing.T) {
-		pottyTrainable := NewPottyTrainable()
+		notPottyTrainable := NewPottyTrainable().Not()
 
-		b := Dog{
+		d := Dog{
 			LearnableSkills: []string{"lay on couch"},
 		}
 
-		want := false
-		got := pottyTrainable.IsSatisfiedBy(b)
+		want := true
+		got := notPottyTrainable.IsSatisfiedBy(d)
 
 		if got != want {
 			t.Errorf("want %v, got %v.\n", want, got)
@@ -72,7 +74,9 @@ type Dangerous struct {
 }
 
 func NewDangerous() specification.Specification {
-	return &Dangerous{&specification.BaseSpecification{}}
+	s := &Dangerous{&specification.BaseSpecification{}}
+	s.Relate(s)
+	return s
 }
 
 func (s *Dangerous) IsSatisfiedBy(i interface{}) bool {
@@ -122,7 +126,9 @@ type Affordable struct {
 }
 
 func NewAffordable() specification.Specification {
-	return &Affordable{&specification.BaseSpecification{}}
+	s := &Affordable{&specification.BaseSpecification{}}
+	s.Relate(s)
+	return s
 }
 
 func (s *Affordable) IsSatisfiedBy(i interface{}) bool {
@@ -164,5 +170,81 @@ func TestAffordable(t *testing.T) {
 		if got != want {
 			t.Errorf("want %v, got %v.\n", want, got)
 		}
+	})
+}
+
+func TestAdoptable(t *testing.T) {
+	pottyTrainable := NewPottyTrainable()
+	dangerous := NewDangerous()
+	affordable := NewAffordable()
+
+	adoptable := pottyTrainable.And(affordable).And(dangerous.Not())
+
+	t.Run("adoptable dog", func(t *testing.T) {
+
+		d := Dog{
+			Cost:            1500.00,
+			LearnableSkills: []string{"house broken"},
+			ToothSize:       2,
+		}
+
+		want := true
+		got := adoptable.IsSatisfiedBy(d)
+
+		if got != want {
+			t.Errorf("want %v, got %v.\n", want, got)
+		}
+
+	})
+
+	t.Run("too expensive dog", func(t *testing.T) {
+
+		d := Dog{
+			Cost:            2100.00,
+			LearnableSkills: []string{"house broken"},
+			ToothSize:       2,
+		}
+
+		want := false
+		got := adoptable.IsSatisfiedBy(d)
+
+		if got != want {
+			t.Errorf("want %v, got %v.\n", want, got)
+		}
+
+	})
+
+	t.Run("too dangerous dog", func(t *testing.T) {
+
+		d := Dog{
+			Cost:            1500.00,
+			LearnableSkills: []string{"house broken"},
+			ToothSize:       5,
+		}
+
+		want := false
+		got := adoptable.IsSatisfiedBy(d)
+
+		if got != want {
+			t.Errorf("want %v, got %v.\n", want, got)
+		}
+
+	})
+
+	t.Run("good for nothing dog", func(t *testing.T) {
+
+		d := Dog{
+			Cost:            1500.00,
+			LearnableSkills: []string{},
+			ToothSize:       2,
+		}
+
+		want := false
+		got := adoptable.IsSatisfiedBy(d)
+
+		if got != want {
+			t.Errorf("want %v, got %v.\n", want, got)
+		}
+
 	})
 }
