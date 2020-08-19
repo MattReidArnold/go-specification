@@ -12,6 +12,39 @@ type Dog struct {
 	LearnableSkills []string
 }
 
+type Trainable interface {
+	GetLearnableSkills() []string
+}
+
+func (d *Dog) GetLearnableSkills() []string {
+	if d == nil {
+		return []string{}
+	}
+	return d.LearnableSkills
+}
+
+type Biter interface {
+	GetToothSize() float64
+}
+
+func (d *Dog) GetToothSize() float64 {
+	if d == nil {
+		return 0.0
+	}
+	return d.ToothSize
+}
+
+type Purchasable interface {
+	GetCost() float64
+}
+
+func (d *Dog) GetCost() float64 {
+	if d == nil {
+		return 0.0
+	}
+	return d.Cost
+}
+
 type PottyTrainable struct {
 	specification.Specification
 }
@@ -23,24 +56,23 @@ func NewPottyTrainable() specification.Specification {
 }
 
 func (s *PottyTrainable) IsSatisfiedBy(i interface{}) bool {
-	switch i.(type) {
-	case Dog:
-		for _, value := range i.(Dog).LearnableSkills {
-			if value == "house broken" {
-				return true
-			}
-		}
-		return false
-	default:
+	t, ok := i.(Trainable)
+	if !ok {
 		return false
 	}
+	for _, value := range t.GetLearnableSkills() {
+		if value == "house broken" {
+			return true
+		}
+	}
+	return false
 }
 
 func TestPottyTrainable(t *testing.T) {
 	t.Run("PottyTrainable dog", func(t *testing.T) {
 		pottyTrainable := NewPottyTrainable()
 
-		d := Dog{
+		d := &Dog{
 			LearnableSkills: []string{"sit", "stay", "house broken"},
 		}
 
@@ -56,7 +88,7 @@ func TestPottyTrainable(t *testing.T) {
 	t.Run("Not PottyTrainable dog", func(t *testing.T) {
 		notPottyTrainable := NewPottyTrainable().Not()
 
-		d := Dog{
+		d := &Dog{
 			LearnableSkills: []string{"lay on couch"},
 		}
 
@@ -80,19 +112,18 @@ func NewDangerous() specification.Specification {
 }
 
 func (s *Dangerous) IsSatisfiedBy(i interface{}) bool {
-	switch i.(type) {
-	case Dog:
-		return i.(Dog).ToothSize > 3
-	default:
+	b, ok := i.(Biter)
+	if !ok {
 		return false
 	}
+	return b.GetToothSize() > 3
 }
 
 func TestDangerous(t *testing.T) {
 	t.Run("Dangerous dog", func(t *testing.T) {
 		spec := NewDangerous()
 
-		b := Dog{
+		b := &Dog{
 			ToothSize: 4,
 		}
 
@@ -108,7 +139,7 @@ func TestDangerous(t *testing.T) {
 	t.Run("Not Dangerous dog", func(t *testing.T) {
 		spec := NewPottyTrainable()
 
-		b := Dog{
+		b := &Dog{
 			ToothSize: 3,
 		}
 
@@ -132,19 +163,18 @@ func NewAffordable() specification.Specification {
 }
 
 func (s *Affordable) IsSatisfiedBy(i interface{}) bool {
-	switch i.(type) {
-	case Dog:
-		return i.(Dog).Cost < 2000
-	default:
+	p, ok := i.(Purchasable)
+	if !ok {
 		return false
 	}
+	return p.GetCost() < 2000
 }
 
 func TestAffordable(t *testing.T) {
 	t.Run("Affordable dog", func(t *testing.T) {
 		spec := NewAffordable()
 
-		b := Dog{
+		b := &Dog{
 			Cost: 1999.99,
 		}
 
@@ -160,7 +190,7 @@ func TestAffordable(t *testing.T) {
 	t.Run("Not Affordable dog", func(t *testing.T) {
 		spec := NewPottyTrainable()
 
-		b := Dog{
+		b := &Dog{
 			Cost: 2000.00,
 		}
 
@@ -182,7 +212,7 @@ func TestAdoptable(t *testing.T) {
 
 	t.Run("adoptable dog", func(t *testing.T) {
 
-		d := Dog{
+		d := &Dog{
 			Cost:            1500.00,
 			LearnableSkills: []string{"house broken"},
 			ToothSize:       2,
@@ -199,7 +229,7 @@ func TestAdoptable(t *testing.T) {
 
 	t.Run("too expensive dog", func(t *testing.T) {
 
-		d := Dog{
+		d := &Dog{
 			Cost:            2100.00,
 			LearnableSkills: []string{"house broken"},
 			ToothSize:       2,
@@ -216,7 +246,7 @@ func TestAdoptable(t *testing.T) {
 
 	t.Run("too dangerous dog", func(t *testing.T) {
 
-		d := Dog{
+		d := &Dog{
 			Cost:            1500.00,
 			LearnableSkills: []string{"house broken"},
 			ToothSize:       5,
@@ -233,7 +263,7 @@ func TestAdoptable(t *testing.T) {
 
 	t.Run("good for nothing dog", func(t *testing.T) {
 
-		d := Dog{
+		d := &Dog{
 			Cost:            1500.00,
 			LearnableSkills: []string{},
 			ToothSize:       2,
