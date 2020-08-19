@@ -46,11 +46,11 @@ func (d *Dog) GetCost() float64 {
 }
 
 type PottyTrainable struct {
-	specification.Specification
+	specification.Satisfiable
 }
 
-func NewPottyTrainable() specification.Specification {
-	s := &PottyTrainable{&specification.BaseSpecification{}}
+func NewPottyTrainable() specification.Satisfiable {
+	s := &PottyTrainable{&specification.Specification{}}
 	s.Relate(s)
 	return s
 }
@@ -102,11 +102,11 @@ func TestPottyTrainable(t *testing.T) {
 }
 
 type Dangerous struct {
-	specification.Specification
+	specification.Satisfiable
 }
 
-func NewDangerous() specification.Specification {
-	s := &Dangerous{&specification.BaseSpecification{}}
+func NewDangerous() specification.Satisfiable {
+	s := &Dangerous{&specification.Specification{}}
 	s.Relate(s)
 	return s
 }
@@ -153,11 +153,11 @@ func TestDangerous(t *testing.T) {
 }
 
 type Affordable struct {
-	specification.Specification
+	specification.Satisfiable
 }
 
-func NewAffordable() specification.Specification {
-	s := &Affordable{&specification.BaseSpecification{}}
+func NewAffordable() specification.Satisfiable {
+	s := &Affordable{&specification.Specification{}}
 	s.Relate(s)
 	return s
 }

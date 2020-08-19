@@ -1,82 +1,87 @@
 package specification
 
-type Specification interface {
+// Satisfiable interface that allows chaining of specifications
+type Satisfiable interface {
 	IsSatisfiedBy(interface{}) bool
-	And(Specification) Specification
-	Or(Specification) Specification
-	Not() Specification
-	Relate(Specification)
+	And(Satisfiable) Satisfiable
+	Or(Satisfiable) Satisfiable
+	Not() Satisfiable
+	Relate(Satisfiable)
 }
 
-type BaseSpecification struct {
-	Specification
+// Specification is embedded in all specifications to provide chaining behavior
+type Specification struct {
+	Satisfiable
 }
 
-// Check specification
-func (s *BaseSpecification) IsSatisfiedBy(t interface{}) bool {
+// IsSatisfiedBy for Specification should never return true. In practice the class
+// that has an embedded Specification should override this method.
+func (s *Specification) IsSatisfiedBy(t interface{}) bool {
 	return false
 }
 
-// Condition AND
-func (s *BaseSpecification) And(spec Specification) Specification {
+// And combines two Satisfiable Specification using AND logic
+func (s *Specification) And(spec Satisfiable) Satisfiable {
 	a := &AndSpecification{
-		s.Specification, spec,
+		s.Satisfiable, spec,
 	}
 	a.Relate(a)
 	return a
 }
 
-// Condition OR
-func (s *BaseSpecification) Or(spec Specification) Specification {
+// Or combines two Satisfiable Specification using OR logic
+func (s *Specification) Or(spec Satisfiable) Satisfiable {
 	a := &OrSpecification{
-		s.Specification, spec,
+		s.Satisfiable, spec,
 	}
 	a.Relate(a)
 	return a
 }
 
-// Condition NOT
-func (s *BaseSpecification) Not() Specification {
+// Not inverts the result of Satisfiable Specification
+func (s *Specification) Not() Satisfiable {
 	a := &NotSpecification{
-		s.Specification,
+		s.Satisfiable,
 	}
 	a.Relate(a)
 	return a
 }
 
-// Relate to specification
-func (s *BaseSpecification) Relate(spec Specification) {
-	s.Specification = spec
+// Relate creates a circular embedding between abstract Specification and concrete Specifiable
+// This enables functions defined on embedded abstract Specification to be able to call
+// IsSatisfiedBy on encloseing concrete specification
+func (s *Specification) Relate(spec Satisfiable) {
+	s.Satisfiable = spec
 }
 
-// AndSpecification
+// AndSpecification combines two Satisfiable specifications with AND logic
 type AndSpecification struct {
-	Specification
-	compare Specification
+	Satisfiable
+	compare Satisfiable
 }
 
-// Check specification
+// IsSatisfiedBy verifies both Satisfiable specifications
 func (s *AndSpecification) IsSatisfiedBy(t interface{}) bool {
-	return s.Specification.IsSatisfiedBy(t) && s.compare.IsSatisfiedBy(t)
+	return s.Satisfiable.IsSatisfiedBy(t) && s.compare.IsSatisfiedBy(t)
 }
 
-// OrSpecification
+// OrSpecification combines two Satisfiable specifications with OR logic
 type OrSpecification struct {
-	Specification
-	compare Specification
+	Satisfiable
+	compare Satisfiable
 }
 
-// Check specification
+// IsSatisfiedBy verifies at least one Satisfiable specifications
 func (s *OrSpecification) IsSatisfiedBy(t interface{}) bool {
-	return s.Specification.IsSatisfiedBy(t) || s.compare.IsSatisfiedBy(t)
+	return s.Satisfiable.IsSatisfiedBy(t) || s.compare.IsSatisfiedBy(t)
 }
 
-// NotSpecification
+// NotSpecification inverts the logic of a Satisfiable specification
 type NotSpecification struct {
-	Specification
+	Satisfiable
 }
 
-// Check specification
+// IsSatisfiedBy verifies a Satisfiable specification is not satisfied
 func (s *NotSpecification) IsSatisfiedBy(t interface{}) bool {
-	return !s.Specification.IsSatisfiedBy(t)
+	return !s.Satisfiable.IsSatisfiedBy(t)
 }
